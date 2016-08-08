@@ -37,6 +37,17 @@ source "${KUBE_ROOT}/cluster/common.sh"
 AZKUBE_VERSION="v0.0.5"
 REGISTER_MASTER_KUBELET="true"
 
+function ensure-jq-min-version() {
+    jq_version_string=$(eval "$(which jq) --version")
+    jq_version=${jq_version_string/jq-/}
+    jq_min_version=1.4
+
+    if (( $(bc <<< "$jq_version < $jq_min_version") )) ; then
+        echo "jq version must be at least at version $jq_min_version"
+        exit 1
+    fi
+}
+
 function verify-prereqs() {
     required_binaries=("docker" "jq")
 
@@ -219,6 +230,7 @@ function kube-up {
     echo "++> AZURE KUBE-UP STARTED: $(date)"
 
     verify-prereqs
+    ensure-jq-min-version
     azure-ensure-config
 
     if [[ -z "${AZURE_HYPERKUBE_SPEC:-}" ]]; then
